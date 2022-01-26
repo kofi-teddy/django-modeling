@@ -44,14 +44,11 @@ class Cart(models.Model):
 
 # Sparse Model
 '''
-With the success of your online bookstore, users started to ask if 
-you also sell e-books. E-books are a great product for your online 
-store, and you want to start selling them right away.
-
+With the success of the online bookstore, users started to ask if 
+the shop sell e-books. E-books are a great product for the online 
+store.
 A physical book is different from an e-book:
-
 An e-book has no weight. It’s a virtual product.
-
 An e-book does not require shipment. Users download it from the website.
 '''
 
