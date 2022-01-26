@@ -29,7 +29,8 @@ INSTALLED_APPS = [
     'apps.course',
     'apps.member',
     'apps.pizza',
-    'apps.sports',
+    # 'apps.sports',
+    'apps.shop',
 ]
 
 MIDDLEWARE = [
