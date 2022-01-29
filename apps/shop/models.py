@@ -1,7 +1,8 @@
+from random import choices
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.core.exceptions import ValidationError
-
+from django.contrib.posgtres.fields import JSONField
 
 # use case
 """
@@ -52,12 +53,80 @@ An e-book has no weight. It’s a virtual product.
 An e-book does not require shipment. Users download it from the website.
 """
 
+# class Book(models.Model):
+#     TYPE_PHYSICAL = "physical"
+#     TYPE_VIRTUAL = "virtual"
+#     TYPE_CHOICES = (
+#         (TYPE_PHYSICAL, "Physical"),
+#         (TYPE_VIRTUAL, "virtual"),
+#     )
+#     type = models.CharField(
+#         max_length=20,
+#         choices=TYPE_CHOICES,
+#     )
+
+#     # Common attributes
+#     name = models.CharField(max_length=100)
+#     price = models.PositiveIntegerField(
+#         help_text="in cedis",
+#     )
+
+#     # Specific attributes
+#     weight = models.PositiveIntegerField(
+#         help_text="in grams",
+#     )
+#     download_link = models.URLField(null=True, blank=True)
+
+#     def __str__(self) -> str:
+#         return f"[{self.get_type_display()}] {self.name}"
+
+#     def clean(self) -> None:
+#         if self.type == Book.TYPE_VIRTUAL:
+#             if self.weight != 0:
+#                 raise ValidationError(
+#                     'A virtual product weight cannot exceed zero.'
+#                 )
+
+#             if self.download_link is None:
+#                 raise ValidationError(
+#                     'A virtual product must have a download link.'
+#                 )
+#         elif self.type == Book.TYPE_PHYSICAL:
+#             if self.weight == 0:
+#                 raise ValidationError(
+#                     'A physical product weight must exceed zero.'
+#                 )
+#             if self.download_link is not None:
+#                 raise ValidationError(
+#                     'A phsical product cannont have a download link.'
+#                 )
+#         else:
+#             assert False, f'Unknown product type {self.type}'
+
+# class Cart(models.Model):
+#     user = models.OneToOneField(
+#         get_user_model(), primary_key=True, on_delete=models.CASCADE
+#     )
+#     books = models.ManyToManyField(Book, related_name="products")
+
+
+# Semi-Strutured Model
+'''
+In the sparse model approach, fields for every new type of 
+product were added. The model now has a lot of nullable fields, 
+and new developers and employees are having trouble keeping up.
+
+To address the clutter, keep only the common fields 
+(name and price) on the model. Store the rest of the fields in a 
+single JSONField:
+'''
+
 class Book(models.Model):
-    TYPE_PHYSICAL = "physical"
-    TYPE_VIRTUAL = "virtual"
+    TYPE_PHYSICAL = 'physical'
+    TYPE_VIRTUAL = 'virtual'
     TYPE_CHOICES = (
-        (TYPE_PHYSICAL, "Physical"),
-        (TYPE_VIRTUAL, "virtual"),
+        (TYPE_PHYSICAL, 'physical'),
+        (TYPE_VIRTUAL, 'virtual'),
     )
     type = models.CharField(
         max_length=20,
@@ -67,45 +136,21 @@ class Book(models.Model):
     # Common attributes
     name = models.CharField(max_length=100)
     price = models.PositiveIntegerField(
-        help_text="in cedis",
+        help_text='in cedis',
     )
-
-    # Specific attributes
-    weight = models.PositiveIntegerField(
-        help_text="in grams",
-    )
-    download_link = models.URLField(null=True, blank=True)
+    extra = JSONField()
 
     def __str__(self) -> str:
-        return f"[{self.get_type_display()}] {self.name}"
+        return f'[{self.get_type_display()}] {self.name}'
 
-    def clean(self) -> None:
-        if self.type == Book.TYPE_VIRTUAL:
-            if self.weight != 0:
-                raise ValidationError(
-                    'A virtual product weight cannot exceed zero.'
-                )
-
-            if self.download_link is None:
-                raise ValidationError(
-                    'A virtual product must have a download link.'
-                )
-        elif self.type == Book.TYPE_PHYSICAL:
-            if self.weight == 0:
-                raise ValidationError(
-                    'A physical product weight must exceed zero.'
-                )
-            if self.download_link is not None:
-                raise ValidationError(
-                    'A phsical product cannont have a download link.'
-                )
-        else:
-            assert False, f'Unknown product type {self.type}'
 
 class Cart(models.Model):
     user = models.OneToOneField(
-        get_user_model(), primary_key=True, on_delete=models.CASCADE
+        get_user_model(),
+        primary_key = True, 
+        on_delete=models.CASCADE,
     )
-    books = models.ManyToManyField(Book, related_name="products")
-
-
+    books = models.ManyToManyField(
+        Book,
+        related_name='+',
+    )
