@@ -264,6 +264,14 @@ for the Product model. The Product model will have all the common
 fields you defined in the base model. Derived models such as Book and 
 EBook will reference the Product table using a one-to-one field. 
 To reference a product, you create a foreign key to the base model.
+
+The concrete base model approach is useful when common fields in the 
+base class are sufficient to satisfy most common queries.
+
+For example, if there is the need to query for the cart total price, 
+show a list of items in the cart, or run ad hoc analytic queries 
+on the cart model, there is a possibility to benefit from having 
+all the common attributes in a single database table.
 '''
 class Product(models.Model):
     name = models.CharField(max_length=255)
