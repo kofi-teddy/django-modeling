@@ -122,76 +122,112 @@ To address the clutter, keep only the common fields
 single JSONField:
 '''
 
-class Book(models.Model):
-    TYPE_PHYSICAL = 'physical'
-    TYPE_VIRTUAL = 'virtual'
-    TYPE_CHOICES = (
-        (TYPE_PHYSICAL, 'physical'),
-        (TYPE_VIRTUAL, 'virtual'),
-    )
-    type = models.CharField(
-        max_length=20,
-        choices=TYPE_CHOICES,
-    )
+# class Book(models.Model):
+#     TYPE_PHYSICAL = 'physical'
+#     TYPE_VIRTUAL = 'virtual'
+#     TYPE_CHOICES = (
+#         (TYPE_PHYSICAL, 'physical'),
+#         (TYPE_VIRTUAL, 'virtual'),
+#     )
+#     type = models.CharField(
+#         max_length=20,
+#         choices=TYPE_CHOICES,
+#     )
 
-    # Common attributes
-    name = models.CharField(max_length=100)
-    price = models.PositiveIntegerField(
-        help_text='in cedis',
-    )
-    extra = JSONField()
+#     # Common attributes
+#     name = models.CharField(max_length=100)
+#     price = models.PositiveIntegerField(
+#         help_text='in cedis',
+#     )
+#     extra = JSONField()
 
-    def __str__(self) -> str:
-        return f'[{self.get_type_display()}] {self.name}'
+#     def __str__(self) -> str:
+#         return f'[{self.get_type_display()}] {self.name}'
 
-    def clean(self) -> None:
+#     def clean(self) -> None:
 
-        if self.type == Book.TYPE_VIRTUAL:
+#         if self.type == Book.TYPE_VIRTUAL:
 
-            try:
-                weight = int(self.extra['weight'])
-            except ValueError:
-                raise ValidationError(
-                    'Weight must be a number'
-                )
-            except KeyError:
-                pass
-            else:
-                if weight != 0:
-                    raise ValidationError(
-                        'A virtual product weight cannot exceed zero.'
-                    )
-            try:
-                download_link = self.extra['download_link']
-            except KeyError:
-                pass
-            else:
-                # will raise a validation error 
-                URLValidator()(download_link)
+#             try:
+#                 weight = int(self.extra['weight'])
+#             except ValueError:
+#                 raise ValidationError(
+#                     'Weight must be a number'
+#                 )
+#             except KeyError:
+#                 pass
+#             else:
+#                 if weight != 0:
+#                     raise ValidationError(
+#                         'A virtual product weight cannot exceed zero.'
+#                     )
+#             try:
+#                 download_link = self.extra['download_link']
+#             except KeyError:
+#                 pass
+#             else:
+#                 # will raise a validation error 
+#                 URLValidator()(download_link)
         
-        elif self.type == Book.TYPE_PHYSICAL:
+#         elif self.type == Book.TYPE_PHYSICAL:
 
-            try:
-                weight = int(self.extra['weight'])
-            except ValueError:
-                raise ValidationError('Weight must be a number')
-            except KeyError:
-                pass
-            else:
-                if weight == 0:
-                    raise VAlidationError(
-                        'A physical product weight must exceed zero.'
-                    )
+#             try:
+#                 weight = int(self.extra['weight'])
+#             except ValueError:
+#                 raise ValidationError('Weight must be a number')
+#             except KeyError:
+#                 pass
+#             else:
+#                 if weight == 0:
+#                     raise VAlidationError(
+#                         'A physical product weight must exceed zero.'
+#                     )
             
-            try:
-                download_link = self.extra['download_link']
-            except KeyError:
-                pass
-            else:
-                if download_link is not None:
-                    raise ValidationError('A physical product cannot have a download link.')
-        else:
-            raise ValidationError(f'Unknon product type "{self.type}" ')
+#             try:
+#                 download_link = self.extra['download_link']
+#             except KeyError:
+#                 pass
+#             else:
+#                 if download_link is not None:
+#                     raise ValidationError('A physical product cannot have a download link.')
+#         else:
+#             raise ValidationError(f'Unknon product type "{self.type}" ')
+
+
+# Abstract Base Model 
+'''
+Adding additonal or different types of product such as e-readers, 
+pens and notebooks.
+
+A book and an e-book are both products. A product is defined 
+using common attributes such as name and price. In an object-oriented 
+environment, create a Product as a base class or an interface.
+
+Define a Product abstract base class and add two models 
+for Book and EBook.
+'''
+class Product(models.Model):
+    class Meta:
+        abstract = True
+    
+    name = models.CharField(max_length=255)
+    price = models.PositiveIntegerField(
+        help_text='in cedis'
+    )
+
+    def __str__(self):
+        return self.name
+
+
+class Book(Product):
+    weight = models.PositiveIntegerField(
+        help_text='in cedis'
+    )
+
+
+class EBook(Product):
+    download_link = models.URLField()
+
 
 class Cart(models.Model):
     user = models.OneToOneField(
