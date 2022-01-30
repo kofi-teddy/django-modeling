@@ -305,12 +305,21 @@ for some core capabilities such as migrations and permissions.
 
 
 class Cart(models.Model):
-    user = model.OneToOneField(
+    user = models.OneToOneField(
         get_user_model(),
         primary_key=True,
         on_delete=models.CASCADE,
     )
 
+    # method to add items to the cart
+    def add_item(self, product) -> 'CartItem': 
+        product_content_type = ContentType.objects.get_for_model(product)
+
+        return CartItem.objects.create(
+            cart=self, 
+            product_content_type=product_content_type,
+            product_object_id=product.pk,
+        )
 
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items")
