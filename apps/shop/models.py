@@ -1,9 +1,12 @@
 from random import choices
+
 from django.contrib.auth import get_user_model
-from django.db import models
-from django.core.exceptions import ValidationError
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.posgtres.fields import JSONField
+from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
+from django.db import models
 
 # use case
 """
@@ -112,7 +115,7 @@ An e-book does not require shipment. Users download it from the website.
 
 
 # Semi-Strutured Model
-'''
+"""
 In the sparse model approach, fields for every new type of 
 product were added. The model now has a lot of nullable fields, 
 and new developers and employees are having trouble keeping up.
@@ -120,7 +123,7 @@ and new developers and employees are having trouble keeping up.
 To address the clutter, keep only the common fields 
 (name and price) on the model. Store the rest of the fields in a 
 single JSONField:
-'''
+"""
 
 # class Book(models.Model):
 #     TYPE_PHYSICAL = 'physical'
@@ -166,9 +169,9 @@ single JSONField:
 #             except KeyError:
 #                 pass
 #             else:
-#                 # will raise a validation error 
+#                 # will raise a validation error
 #                 URLValidator()(download_link)
-        
+
 #         elif self.type == Book.TYPE_PHYSICAL:
 
 #             try:
@@ -182,7 +185,7 @@ single JSONField:
 #                     raise VAlidationError(
 #                         'A physical product weight must exceed zero.'
 #                     )
-            
+
 #             try:
 #                 download_link = self.extra['download_link']
 #             except KeyError:
@@ -194,8 +197,8 @@ single JSONField:
 #             raise ValidationError(f'Unknon product type "{self.type}" ')
 
 
-# Abstract Base Model 
-'''
+# Abstract Base Model
+"""
 Adding additonal or different types of product such as e-readers, 
 pens and notebooks.
 
@@ -221,11 +224,11 @@ payment process, PayPal payment process, and store credit payment
 process. For each of the derived classes, implement the payment process 
 in a very different way that cannot be easily shared. In this case, 
 it might make sense to handle each payment process specifically.
-'''
+"""
 # class Product(models.Model):
 #     class Meta:
 #         abstract = True
-    
+
 #     name = models.CharField(max_length=255)
 #     price = models.PositiveIntegerField(
 #         help_text='in cedis'
@@ -246,7 +249,7 @@ it might make sense to handle each payment process specifically.
 
 
 # Concrete Base Model
-'''
+"""
 Django offers another way to implement inheritance in models. 
 Instead of using an abstract base class that only exists in the code, 
 make the base class concrete. “Concrete” means that the base class 
@@ -272,10 +275,12 @@ For example, if there is the need to query for the cart total price,
 show a list of items in the cart, or run ad hoc analytic queries 
 on the cart model, there is a possibility to benefit from having 
 all the common attributes in a single database table.
-'''
+"""
+
+
 class Product(models.Model):
     name = models.CharField(max_length=255)
-    price = models.PositiveIntegerField(help_text='in cedis')
+    price = models.PositiveIntegerField(help_text="in cedis")
 
     def __str__(self) -> str:
         return self.name
@@ -289,23 +294,54 @@ class EBook(Product):
     download_link = models.URLField()
 
 
+# Generic Foreign Key
+"""
+Django offers a special way of referencing any model in the project 
+called GenericForeignKey. Generic foreign keys are part of the 
+Content Types framework built into Django. The content type framework 
+is used by Django itself to keep track of models. This is necessary 
+for some core capabilities such as migrations and permissions.
+"""
+
 
 class Cart(models.Model):
-    user = models.OneToOneField(
+    user = model.OneToOneField(
         get_user_model(),
-        primary_key = True, 
+        primary_key=True,
         on_delete=models.CASCADE,
     )
-    items = models.ManyToManyField(
-        Book,
-        related_name='+',
+
+
+class CartItem(models.Model):
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items")
+    product_object_id = models.IntegerField()
+    product_content_type = models.IntegerField()
+    product_content_type = models.ForeignKey(
+       ContentType,
+       on_delete=models.PROTECT, 
     )
+    product = GenericForeignKey(
+        'product_content_type',
+        'product_object_id',
+    )
+    
+
+# class Cart(models.Model):
+#     user = models.OneToOneField(
+#         get_user_model(),
+#         primary_key = True,
+#         on_delete=models.CASCADE,
+#     )
+#     items = models.ManyToManyField(
+#         Book,
+#         related_name='+',
+#     )
 
 
 # class Cart(models.Model):
 #     user = models.OneToOneField(
 #         get_user_model(),
-#         primary_key = True, 
+#         primary_key = True,
 #         on_delete=models.CASCADE,
 #     )
 #     books = models.ManyToManyField(
@@ -313,4 +349,3 @@ class Cart(models.Model):
 #         related_name='+',
 #     )
 #     ebooks = models.ManyToManyField(EBook, related_name='+',)
-
