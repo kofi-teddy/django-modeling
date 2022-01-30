@@ -247,8 +247,9 @@ class Cart(models.Model):
         primary_key = True, 
         on_delete=models.CASCADE,
     )
-    items = models.ManyToManyField(
-        Product,
+    books = models.ManyToManyField(
+        Book,
         related_name='+',
     )
+    ebooks = models.ManyToManyField(EBook, related_name='+',)
 
