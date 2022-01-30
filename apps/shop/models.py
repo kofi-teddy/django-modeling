@@ -205,28 +205,93 @@ environment, create a Product as a base class or an interface.
 
 Define a Product abstract base class and add two models 
 for Book and EBook.
+
+An abstract base model is a good choice when there are very few 
+types of objects that required very distinct logic.
+
+An intuitive example is modeling a payment process for an online 
+shop. There is the need to accept payments with credit cards, PayPal, and 
+store credit. Each payment method goes through a very different 
+process that requires very distinct logic. Adding a new type of 
+payment is not very common, and theres no need in adding new payment 
+methods in the future.
+
+Create a payment process base class with derived classes for credit card 
+payment process, PayPal payment process, and store credit payment 
+process. For each of the derived classes, implement the payment process 
+in a very different way that cannot be easily shared. In this case, 
+it might make sense to handle each payment process specifically.
+'''
+# class Product(models.Model):
+#     class Meta:
+#         abstract = True
+    
+#     name = models.CharField(max_length=255)
+#     price = models.PositiveIntegerField(
+#         help_text='in cedis'
+#     )
+
+#     def __str__(self):
+#         return self.name
+
+
+# class Book(Product):
+#     weight = models.PositiveIntegerField(
+#         help_text='in cedis'
+#     )
+
+
+# class EBook(Product):
+#     download_link = models.URLField()
+
+
+# Concrete Base Model
+'''
+Django offers another way to implement inheritance in models. 
+Instead of using an abstract base class that only exists in the code, 
+make the base class concrete. “Concrete” means that the base class 
+exists in the database as a table, unlike in the abstract base 
+class solution, where the base class only exists in the code.
+
+Using the abstract base model, it was impossible to reference 
+multiple type of products. forcefully created a many-to-many 
+relation for each type of product. This made it harder to 
+perform tasks on the common fields such as getting the total price 
+of all the items in the cart.
+
+Using a concrete base class, Django will create a table in the database 
+for the Product model. The Product model will have all the common 
+fields you defined in the base model. Derived models such as Book and 
+EBook will reference the Product table using a one-to-one field. 
+To reference a product, you create a foreign key to the base model.
 '''
 class Product(models.Model):
-    class Meta:
-        abstract = True
-    
     name = models.CharField(max_length=255)
-    price = models.PositiveIntegerField(
-        help_text='in cedis'
-    )
+    price = models.PositiveIntegerField(help_text='in cedis')
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
 class Book(Product):
-    weight = models.PositiveIntegerField(
-        help_text='in cedis'
-    )
+    weight = models.PositiveIntegerField()
 
 
 class EBook(Product):
     download_link = models.URLField()
+
+
+
+class Cart(models.Model):
+    user = models.OneToOneField(
+        get_user_model(),
+        primary_key = True, 
+        on_delete=models.CASCADE,
+    )
+    items = models.ManyToManyField(
+        Book,
+        related_name='+',
+    )
 
 
 # class Cart(models.Model):
@@ -239,17 +304,5 @@ class EBook(Product):
 #         Book,
 #         related_name='+',
 #     )
-
-
-class Cart(models.Model):
-    user = models.OneToOneField(
-        get_user_model(),
-        primary_key = True, 
-        on_delete=models.CASCADE,
-    )
-    books = models.ManyToManyField(
-        Book,
-        related_name='+',
-    )
-    ebooks = models.ManyToManyField(EBook, related_name='+',)
+#     ebooks = models.ManyToManyField(EBook, related_name='+',)
 
