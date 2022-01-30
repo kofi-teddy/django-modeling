@@ -229,13 +229,26 @@ class EBook(Product):
     download_link = models.URLField()
 
 
+# class Cart(models.Model):
+#     user = models.OneToOneField(
+#         get_user_model(),
+#         primary_key = True, 
+#         on_delete=models.CASCADE,
+#     )
+#     books = models.ManyToManyField(
+#         Book,
+#         related_name='+',
+#     )
+
+
 class Cart(models.Model):
     user = models.OneToOneField(
         get_user_model(),
         primary_key = True, 
         on_delete=models.CASCADE,
     )
-    books = models.ManyToManyField(
-        Book,
+    items = models.ManyToManyField(
+        Product,
         related_name='+',
     )
+
