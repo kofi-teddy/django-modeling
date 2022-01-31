@@ -301,6 +301,26 @@ called GenericForeignKey. Generic foreign keys are part of the
 Content Types framework built into Django. The content type framework 
 is used by Django itself to keep track of models. This is necessary 
 for some core capabilities such as migrations and permissions.
+
+Generic foreign keys are a great choice for pluggable modules or 
+existing projects. The use of GenericForeignKey and structural 
+subtyping abstract any direct dependency between the modules.
+
+In the bookstore example, the book and e-book models can exist in a 
+separate app and new products can be added without changing the cart 
+module. For existing projects, a Cart module can be added with minimal 
+changes to existing code.
+
+The patterns presented in this article play nicely together. Using a 
+mixture of patterns, you can eliminate some of the disadvantages and 
+optimize the schema for your use case.
+
+For example, in the generic foreign key approach, you were unable to 
+get the price of the entire cart quickly. You had to fetch each item 
+separately and aggregate. You can address this specific concern by 
+inlining the price of the product on the Item model (the sparse model 
+approach). This will allow you to query only the Item model to get the 
+total price very quickly.
 """
 
 
